@@ -185,3 +185,6 @@ testfile/
 
 # Output files
 examples/output/
+
+# Copilot instructions
+.github/copilot-instructions.md
