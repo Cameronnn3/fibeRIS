@@ -40,7 +40,8 @@ class MOOSETensorVPPReader(core.DataIO):
         all_files = os.listdir(directory)
         
         # Find files that mark the start of a vector postprocessor series and contain 'strain_sampler'
-        sampler_files_0000 = [f for f in all_files if f.endswith('_0000.csv') and 'strain_sampler' in f]
+        sampler_files_0000 = [f for f in all_files if f.endswith('_0000.csv') and
+                              ('strain_sampler' in f or 'strain_rate_sampler' in f)]
 
         if not sampler_files_0000:
             self.record_log(f"No strain samplers found in '{directory}'.", level="WARNING")
@@ -60,6 +61,17 @@ class MOOSETensorVPPReader(core.DataIO):
         """
         self.record_log(f"Starting to load data for sampler '{sampler_name}' from directory: {directory}", level="INFO")
         self.sampler_name = sampler_name
+
+        # Determine the base variable name from the sampler name
+        if 'strain_rate_sampler' in sampler_name:
+            base_variable = 'strain_rate'
+        elif 'strain_sampler' in sampler_name:
+            base_variable = 'strain'
+        else:
+            raise ValueError(f"Sampler name '{sampler_name}' is not a recognized strain or strain_rate sampler.")
+        
+        self.record_log(f"Determined base variable as '{base_variable}'", level="INFO")
+        xx_col, yy_col, xy_col = f'{base_variable}_xx', f'{base_variable}_yy', f'{base_variable}_xy'
 
         # 1. Discover and load the time series file
         all_files = os.listdir(directory)
@@ -109,15 +121,19 @@ class MOOSETensorVPPReader(core.DataIO):
 
                 n_points = len(self.daxis)
                 slice_tensor = np.zeros((n_points, 2, 2))
-                slice_tensor[:, 0, 0] = df['strain_xx'].to_numpy()
-                slice_tensor[:, 1, 1] = df['strain_yy'].to_numpy()
-                slice_tensor[:, 0, 1] = df['strain_xy'].to_numpy()
-                slice_tensor[:, 1, 0] = df['strain_xy'].to_numpy() # Assuming symmetric tensor
+                slice_tensor[:, 0, 0] = df[xx_col].to_numpy()
+                slice_tensor[:, 1, 1] = df[yy_col].to_numpy()
+                slice_tensor[:, 0, 1] = df[xy_col].to_numpy()
+                slice_tensor[:, 1, 0] = df[xy_col].to_numpy() # Assuming symmetric tensor
                 tensor_slices.append(slice_tensor)
 
             except Exception as e:
                 self.record_log(f"Could not process file {file_path}. Error: {e}", level="WARNING")
                 continue
+        # 3.5 Post-processing checks
+        # I found the data output from MOOSE always has one more taxis point than we expect.
+        # remove the last time point to align data dimensions.
+        self.taxis = self.taxis[:len(tensor_slices)]
         
         # 4. Stack the time slices into the final data array
         # The shape should be (n_depth, n_time, dim, dim)

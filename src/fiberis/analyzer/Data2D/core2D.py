@@ -270,10 +270,10 @@ class Data2D:
                         raise ValueError(f"Could not parse start_time string: {start_time_raw}") from ve_parse
         elif isinstance(start_time_raw, datetime.datetime):
             self.start_time = start_time_raw
-        else:
-            self.history.add_record(f"Error: Unexpected type for start_time ({type(start_time_raw)}) in {filename_ext}",
-                                    level="ERROR")
-            raise ValueError(f"Unsupported start_time type: {type(start_time_raw)}")
+        # else:
+        #     self.history.add_record(f"Error: Unexpected type for start_time ({type(start_time_raw)}) in {filename_ext}",
+        #                             level="ERROR")
+        #     raise Warning(f"Unsupported start_time type: {type(start_time_raw)}")
 
         self.set_name(os.path.basename(filename_ext))  # Use set_name to also log the change
         self.history.add_record(f"Successfully loaded data from {filename_ext}.", level="INFO")
@@ -623,7 +623,7 @@ class Data2D:
         self.history.print_records(filter_fn=filter_fn)
 
     # --- Plotting ---
-    def plot(self, ax: Optional[Axes] = None, method: str = 'imshow',
+    def plot(self, ax: Optional[Axes] = None, method: str = 'pcolormesh',
              use_timestamp: bool = False, xaxis_rotation: float = 0,
              xtick_n: int = 5, ytick_n: Optional[int] = None,
              clim: Optional[Tuple[float, float]] = None,
