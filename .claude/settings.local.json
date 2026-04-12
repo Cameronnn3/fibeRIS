@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where python:*)",
+      "Bash(conda activate:*)",
+      "Bash(python -c \"print\\(''hello''\\)\")",
+      "Bash(/c/Users/grant/miniforge3/python.exe -c \"print\\(''hello''\\)\")",
+      "Read(//c/Users/grant/**)",
+      "Bash(/c/Users/grant/miniconda3/python.exe:*)",
+      "WebSearch",
+      "WebFetch(domain:mooseframework.inl.gov)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
